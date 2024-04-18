@@ -49,7 +49,8 @@ if __name__ == '__main__':
             username=fake.first_name() 
             while username not in doctor_usernames:
                 i -= 1
-                doctor = Doctor(name=fake.name(), username=username, doctors_id=randrange(1000,15000), email=fake.email(), password="123456", address=fake.address(), gender= rc(genders), specialization=rc(specializations).name)
+                doctor = Doctor(name=fake.name(), username=username, doctors_id=randrange(1000,15000), email=fake.email(), address=fake.address(), gender= rc(genders), specialization=rc(specializations).name)
+                doctor.password_hash = "123456"
                 doctor_usernames.append(username)
                 doctors.append(doctor)
 
@@ -63,7 +64,8 @@ if __name__ == '__main__':
             username=fake.first_name()
             while username not in patient_usernames:
                 i -= 1
-                patient = Patient(name=fake.name(), username=username, email=fake.email(), password="123456", address=fake.address(), gender= rc(genders))
+                patient = Patient(name=fake.name(), username=username, email=fake.email(), address=fake.address(), gender= rc(genders))
+                patient.password_hash = "123456"
                 patient_usernames.append(username)
                 patients.append(patient)
 
