@@ -14,4 +14,5 @@ db = SQLAlchemy(metadata=metadata)
 from models.doctor import Doctor
 from models.patient import Patient
 from models.appointment import Appointment
+from models.specialization import Specialization
 

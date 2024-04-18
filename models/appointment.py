@@ -4,8 +4,8 @@ class Appointment(db.Model, SerializerMixin):
     __tablename__ = 'appointments'
 
     id = db.Column(db.Integer, primary_key=True)
-    day = db.Column(db.String)
-    time = db.Column(db.String)
+    day = db.Column(db.String, nullable=True)
+    time = db.Column(db.String, nullable=True)
     # Add relationships
     doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id'))
     patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'))
