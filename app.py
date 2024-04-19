@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from flask import request, session, jsonify
+from flask import request, session, jsonify, make_response
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
 from config import app, db, api
@@ -65,11 +65,26 @@ class Home(Resource):
 
     def get(self):
         return {"message" : "Welcome to Digress API"}, 200
+    
+class Doctors(Resource):
+    def get(self):
+        doctors = [doctor.to_dict() for doctor in Doctor.query.all()]
+        return jsonify(doctors), 200
+    
+class DoctorByID(Resource):
+    def get(self, id):
+        doctor = doctor.query.filter_by(id=id).first().to_dict()
+        response = make_response(doctor, 200)
+        return response
 
-api.add_resource(Signup, '/signup', endpoint='signup')
-api.add_resource(Login, '/login', endpoint='login')
-api.add_resource(Logout, '/logout', endpoint='logout')
-api.add_resource(Home, '/', endpoint='home')
+
+
+
+api.add_resource(Doctors, '/doctors')
+api.add_resource(Signup, '/signup')
+api.add_resource(Login, '/login')
+api.add_resource(Logout, '/logout')
+api.add_resource(Home, '/')
 
 
 
