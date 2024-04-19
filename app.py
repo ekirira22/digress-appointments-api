@@ -75,10 +75,20 @@ class DoctorByID(Resource):
     def get(self, id):
         doctor = Doctor.query.filter_by(id=id).first().to_dict()
         return jsonify(doctor), 200
+    
+class Patients(Resource):
+    def get(self):
+        patients = [patient.to_dict() for patient in Patient.query.all()]
+        return jsonify(patients), 200
+    
+class PatientById(Resource):
+    def get(self, id):
+        patient = Patient.query.filter_by(id=id).first().to_dict()
+        return jsonify(patient), 200
         
 
-
-
+api.add_resource(PatientById, '/patients/<int:id>')
+api.add_resource(Patients, '/patients')
 api.add_resource(DoctorByID, '/doctors/<int:id>')
 api.add_resource(Doctors, '/doctors')
 api.add_resource(Signup, '/signup')
