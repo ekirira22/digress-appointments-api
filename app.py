@@ -127,7 +127,14 @@ class Specializations(Resource):
     def get(self):
         specs = [spec.to_dict() for spec in Specialization.query.all()]
         return specs, 200
-
+class  DoctorsBySpecialization(Resource):
+    def get(self,specialization):
+        doctor=Doctor.query.filter_by(specialization=specialization).first()
+        if doctor:
+            doctor_dict= doctor.to_dict(rules=("-_password_hash",))
+            return make_response(doctor_dict,200)
+        else:
+            return jsonify({"Message":"Doctor not found"})
 api.add_resource(CheckSession, '/check_session')        
 api.add_resource(Specializations, '/specializations')
 api.add_resource(PatientById, '/patients/<int:id>')
