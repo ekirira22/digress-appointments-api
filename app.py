@@ -7,7 +7,20 @@ from models.dbmodel import Doctor, Patient, Appointment, Specialization
 
 
 # Routes
-
+class CheckSession(Resource):
+    def get(self):
+        user = session.get('username')
+        print(user)
+        # check if a user is a doctor ot patient
+        try:
+            doctor = Doctor.query.filter(Doctor.username == user).first()
+            patient = Patient.query.filter(Patient.username == user).first()
+            if doctor:
+                return doctor.to_dict(rules=('-_password_hash',)), 200
+            elif patient:
+                return patient.to_dict(rules=('-_password_hash',)), 200
+        except Exception as e:
+            return {"errors": ["invalid request"]}, 401
 # Sign a user up
 class Signup(Resource):
 
@@ -15,8 +28,15 @@ class Signup(Resource):
         # A user is either a doctor or a patient
         json = request.get_json()
 
-        if json['password'] is not json['password']:
+        if json['password'] != json['confirm_password']:
             return {"errors" : ["Passwords do not match"]}, 401
+        
+        # check if username is unique to both doctors and patients. Get all username
+        usernames = [doc.username for doc in Doctor.query.all()]
+        usernames.extend([patient.username for patient in Patient.query.all()])
+
+        if json['username'] in usernames:
+            return {"errors" : ["username already exists, try another one"]}, 401
         
         if json.get('doctors_id'):
             # Add doctor
@@ -27,10 +47,10 @@ class Signup(Resource):
                 db.session.add(doctor)
                 db.session.commit()
                 # Add session
-                session['user_id'] = doctor.id
+                session['username'] = doctor.username
             except IntegrityError as e:
                 error_msg = str(e.orig)
-                return {"errors" : error_msg}
+                return {"errors" : [error_msg]}
 
             return doctor.to_dict(), 201
         else:
@@ -42,7 +62,7 @@ class Signup(Resource):
                 db.session.add(patient)
                 db.session.commit()
                 # Add session
-                session['user_id'] = patient.id
+                session['username'] = patient.username
             except IntegrityError as e:
                 error_msg = str(e.orig)
                 return {"errors" : error_msg}
@@ -51,12 +71,29 @@ class Signup(Resource):
 class Login(Resource):
 
     def post(self):
-        # Authenticate user
-        pass
+        json = request.get_json()
+        try:
+            doctor = Doctor.query.filter(Doctor.username == json['username']).first()
+            patient = Patient.query.filter(Patient.username == json['username']).first()
+            if doctor:
+                # Authenticate user. Check password
+                if not Doctor.authenticate(doctor, json['password']):
+                    return {"errors" : ["Wrong username or password"]}, 401
+                session['username'] = doctor.username
+                return doctor.to_dict(rules=('-_password_hash',)), 200
+            elif patient:
+                # Authenticate user. Check password
+                if not Patient.authenticate(patient, json['password']):
+                    return {"errors" : ["Wrong username or password"]}, 401
+                session['username'] = patient.username
+                return patient.to_dict(rules=('-_password_hash',)), 200
+        except Exception as e:
+            return {"errors" : [f"{e} : User does not exist"]}, 401
+
 class Logout(Resource):
     
     def delete(self):
-        session['user_id'] = None
+        session['username'] = None
         return {"message" : "204 - No content"}, 204
 
 # Establish Routes
@@ -69,24 +106,30 @@ class Home(Resource):
 class Doctors(Resource):
     def get(self):
         doctors = [doctor.to_dict() for doctor in Doctor.query.all()]
-        return jsonify(doctors), 200
+        return doctors, 200
     
 class DoctorByID(Resource):
     def get(self, id):
-        doctor = Doctor.query.filter_by(id=id).first().to_dict()
-        return jsonify(doctor), 200
+        doctor = Doctor.query.filter_by(id=id).first().to_dict(rules=('-_password_hash',))
+        return doctor, 200
     
 class Patients(Resource):
     def get(self):
         patients = [patient.to_dict() for patient in Patient.query.all()]
-        return jsonify(patients), 200
+        return patients, 200
     
 class PatientById(Resource):
     def get(self, id):
-        patient = Patient.query.filter_by(id=id).first().to_dict()
-        return jsonify(patient), 200
-        
+        patient = Patient.query.filter_by(id=id).first().to_dict(rules=('-_password_hash',))
+        return patient, 200
+    
+class Specializations(Resource):
+    def get(self):
+        specs = [spec.to_dict() for spec in Specialization.query.all()]
+        return specs, 200
 
+api.add_resource(CheckSession, '/check_session')        
+api.add_resource(Specializations, '/specializations')
 api.add_resource(PatientById, '/patients/<int:id>')
 api.add_resource(Patients, '/patients')
 api.add_resource(DoctorByID, '/doctors/<int:id>')
