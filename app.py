@@ -111,13 +111,30 @@ class Doctors(Resource):
     def post(self):
         pass
     
-class DoctorByID(Resource):
-    def get(self, id):
-        doctor = Doctor.query.filter_by(id=id).first().to_dict(rules=('-_password_hash',))
+class DoctorByUserName(Resource):
+    def get(self, username):
+        doctor = Doctor.query.filter(Doctor.username == username).first().to_dict(rules=('-_password_hash','-appointments'))
         return doctor, 200
     
-    def patch(self, id):
-        pass
+    def patch(self, username):
+        doctor = Doctor.query.filter(Doctor.username == username).first()
+        if not doctor:
+            return {'error': 'Doctor not found'}, 404
+        
+        data = request.get_json()
+        for attr, value in data.items():
+            if hasattr(doctor, attr):
+                setattr(doctor, attr, value)
+            else:
+                return {'error': f'Invalid attribute: {attr}'}, 400
+
+        db.session.commit()
+
+        response = make_response(
+            doctor.to_dict('-appointments', '-_password_hash'),
+            200,
+        )
+        return response
 
     def delete(self, id):
         pass
@@ -130,10 +147,34 @@ class Patients(Resource):
     def post(self):
         pass
     
-class PatientById(Resource):
-    def get(self, id):
-        patient = Patient.query.filter_by(id=id).first().to_dict(rules=('-_password_hash',))
-        return patient, 200
+class PatientByUserName(Resource):
+    def get(self, username):
+        patient = Patient.query.filter(Patient.username==username).first().to_dict(rules=('-_password_hash','-appointments',))
+        if not patient:
+            return {'error': 'Patient not found'}, 404
+        else:
+            return patient, 200
+    
+    def patch(self, username):
+        patient = Patient.query.filter(Patient.username==username).first()
+        if not patient:
+            return {'error': 'Patient not found'}, 404
+        
+        data = request.get_json()
+        for attr, value in data.items():
+            if hasattr(patient, attr):
+                setattr(patient, attr, value)
+            else:
+                return {'error': f'Invalid attribute: {attr}'}, 400
+
+        db.session.commit()
+
+        response = make_response(
+            patient.to_dict('-appointments', '-_password_hash'),
+            200,
+        )
+        return response
+
     
 class Specializations(Resource):
     def get(self):
@@ -149,9 +190,9 @@ class Specializations(Resource):
 
 api.add_resource(CheckSession, '/check_session')        
 api.add_resource(Specializations, '/specializations')
-api.add_resource(PatientById, '/patients/<int:id>')
+api.add_resource(PatientByUserName, '/patients/<string:username>')
 api.add_resource(Patients, '/patients')
-api.add_resource(DoctorByID, '/doctors/<int:id>')
+api.add_resource(DoctorByUserName, '/doctors/<string:username>')
 api.add_resource(Doctors, '/doctors')
 api.add_resource(Signup, '/signup')
 api.add_resource(Login, '/login')
