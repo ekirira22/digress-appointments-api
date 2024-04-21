@@ -1,4 +1,5 @@
 from models.dbmodel import db
+from models.doctor import Doctor
 from flask import Flask, request, make_response, current_app, jsonify
 from flask_restful import Api, Resource
 from flask_cors import CORS

@@ -71,20 +71,35 @@ class Doctors(Resource):
         doctors = [doctor.to_dict() for doctor in Doctor.query.all()]
         return jsonify(doctors), 200
     
+    def post(self):
+        pass
+    
 class DoctorByID(Resource):
     def get(self, id):
         doctor = Doctor.query.filter_by(id=id).first().to_dict()
         return jsonify(doctor), 200
     
+    def patch(self, id):
+        pass
+
+    def delete(self, id):
+        pass
+    
 class Patients(Resource):
     def get(self):
         patients = [patient.to_dict() for patient in Patient.query.all()]
         return jsonify(patients), 200
+    def post(self):
+        pass
     
 class PatientById(Resource):
     def get(self, id):
         patient = Patient.query.filter_by(id=id).first().to_dict()
         return jsonify(patient), 200
+    def patch(self,id):
+        pass
+    def delete(self, id):
+        pass
         
 
 api.add_resource(PatientById, '/patients/<int:id>')
