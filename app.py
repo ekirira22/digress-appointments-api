@@ -78,15 +78,17 @@ class Login(Resource):
             if doctor:
                 # Authenticate user. Check password
                 if not Doctor.authenticate(doctor, json['password']):
-                    return {"errors" : ["Wrong username or password"]}, 401
+                    return {"errors" : ["Wrong username or password. Try again"]}, 401
                 session['username'] = doctor.username
                 return doctor.to_dict(rules=('-_password_hash',)), 200
             elif patient:
                 # Authenticate user. Check password
                 if not Patient.authenticate(patient, json['password']):
-                    return {"errors" : ["Wrong username or password"]}, 401
+                    return {"errors" : ["Wrong username or password. Try again"]}, 401
                 session['username'] = patient.username
                 return patient.to_dict(rules=('-_password_hash',)), 200
+            else:
+                return {"errors" : ["Wrong username or password"]}, 404
         except Exception as e:
             return {"errors" : [f"{e} : User does not exist"]}, 401
 
@@ -105,16 +107,41 @@ class Home(Resource):
     
 class Doctors(Resource):
     def get(self):
-        doctors = [doctor.to_dict() for doctor in Doctor.query.all()]
+        doctors = [doctor.to_dict(rules=('-_password_hash',)) for doctor in Doctor.query.all()]
         return doctors, 200
     
     def post(self):
-        pass
+        data = request.get_json()
+        try:
+            new_doctor = Doctor(
+                name = data ['name'],
+                username = data ['username'],
+                doctors_id = data['doctors_id'],
+                email = data ['email'],
+                address = data ['address'],
+                gender = data ['gender'],
+                specialization = data ['specialization'],
+                pulse_rate = data ['pulse_rate'],
+                blood_pressure = data ['blood_pressure'],
+                temparature = data ['temparature'],
+                blood_group = data ['blood_group']
+
+            )
+            db.session.add(new_doctor)
+            db.session.commit()
+
+        except IntegrityError as e:
+                error_msg = str(e.orig)
+                return {"errors" : error_msg}
+
     
 class DoctorByUserName(Resource):
     def get(self, username):
         doctor = Doctor.query.filter(Doctor.username == username).first().to_dict(rules=('-_password_hash','-appointments'))
-        return doctor, 200
+        if not doctor:
+            return {'error': 'Doctor not found'}, 404
+        else:
+            doctor.to_dict(rules=('-_password_hash','-appointments')), 200
     
     def patch(self, username):
         doctor = Doctor.query.filter(Doctor.username == username).first()
@@ -130,26 +157,43 @@ class DoctorByUserName(Resource):
 
         db.session.commit()
 
-        response = make_response(
-            doctor.to_dict('-appointments', '-_password_hash'),
-            200,
-        )
-        return response
+        return doctor.to_dict(rules=('-_password_hash',)), 200
+        
 
-    def delete(self, id):
-        pass
+    def delete(self, username):
+        doctor = Doctor.query.filter(Doctor.username == username).first()
+        if not doctor:
+            return {'error': 'Doctor not found'}, 404
+        
+        db.session.delete(doctor)
+        db.session.commit()
+        return '', 204
+        
     
 class Patients(Resource):
     def get(self):
-        patients = [patient.to_dict() for patient in Patient.query.all()]
+        patients = [patient.to_dict(rules=('-_password_hash',)) for patient in Patient.query.all()]
         return patients, 200
-        return jsonify(patients), 200
     def post(self):
-        pass
+        data = request.get_json()
+        try:
+            new_patient = Patient(
+                name = data ['name'],
+                username = data ['username'],
+                email = data ['email'],
+                address = data ['address'],
+                gender = data ['gender']
+            )
+            db.session.add(new_patient)
+            db.session.commit()
+
+        except IntegrityError as e:
+                error_msg = str(e.orig)
+                return {"errors" : error_msg}
     
 class PatientByUserName(Resource):
     def get(self, username):
-        patient = Patient.query.filter(Patient.username==username).first().to_dict(rules=('-_password_hash','-appointments',))
+        patient = Patient.query.filter(Patient.username==username).first().to_dict(rules=('-_password_hash',))
         if not patient:
             return {'error': 'Patient not found'}, 404
         else:
@@ -170,29 +214,88 @@ class PatientByUserName(Resource):
         db.session.commit()
 
         response = make_response(
-            patient.to_dict('-appointments', '-_password_hash'),
+            patient.to_dict(rules=('-_password_hash',)),
             200,
         )
         return response
+    def delete(self, username):
+        patient = Patient.query.filter(Patient.username==username).first()
+        if not patient:
+            return {'error': 'Doctor not found'}, 404
+        
+        db.session.delete(patient)
+        db.session.commit()
+        return '', 204
 
     
 class Specializations(Resource):
     def get(self):
         specs = [spec.to_dict() for spec in Specialization.query.all()]
         return specs, 200
-        patient = Patient.query.filter_by(id=id).first().to_dict()
-        return jsonify(patient), 200
+    
     def patch(self,id):
         pass
     def delete(self, id):
         pass
+
+class DoctorById(Resource):
+    def get(self, id):
+        doctor = Doctor.query.filter(Doctor.id==id).first().to_dict(rules=('-_password_hash',))
+        if not doctor:
+            return {'error': ['Doctor not found']}, 404
+        else:
+            return doctor, 200
+        
+class PatientById(Resource):
+    def get(self, id):
+        patient = Patient.query.filter(Patient.id==id).first().to_dict(rules=('-_password_hash',))
+        if not patient:
+            return {'error': ['Patient not found']}, 404
+        else:
+            return patient, 200
+        
+class Appointments(Resource):
+    def get(self):
+        appointments = [appointment.to_dict() for appointment in Appointment.query.all()]
+        return appointments, 200
+
+    def post(self):
+        data = request.get_json()
+        try:
+            new_appointment = Appointment(
+                day = data ['day'],
+                time = data ['time'],
+                doctor_id = data ['doctor_id'],
+                patient_id = data ['patient_id'],
+            )
+            db.session.add(new_appointment)
+            db.session.commit()
+
+        except IntegrityError as e:
+                error_msg = str(e.orig)
+                return {"errors" : error_msg}
+        
+    def delete(self, id):
+        app = Appointment.query.filter(Appointment.id == id).first()
+        if app:
+            db.session.delete(app)
+            db.session.commit()
+            response = make_response({}, 204)
+        else:
+            response = make_response({"error": ["Appointment not found"]}, 404)
+
+        return response
+
         
 
 api.add_resource(CheckSession, '/check_session')        
 api.add_resource(Specializations, '/specializations')
+api.add_resource(Appointments, '/appointments')
 api.add_resource(PatientByUserName, '/patients/<string:username>')
+api.add_resource(PatientById, '/patients/<int:id>')
 api.add_resource(Patients, '/patients')
 api.add_resource(DoctorByUserName, '/doctors/<string:username>')
+api.add_resource(DoctorById, '/doctors/<int:id>')
 api.add_resource(Doctors, '/doctors')
 api.add_resource(Signup, '/signup')
 api.add_resource(Login, '/login')
