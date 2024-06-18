@@ -7,8 +7,8 @@ class Appointment(db.Model, SerializerMixin):
     day = db.Column(db.String, nullable=True)
     time = db.Column(db.String, nullable=True)
     # Add relationships
-    doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id'))
-    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'))
+    doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id', ondelete='CASCADE'))
+    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id', ondelete='CASCADE'))
     # Add serialization
     
     # Add validation

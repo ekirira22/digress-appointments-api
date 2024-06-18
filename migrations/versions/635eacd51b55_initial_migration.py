@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: cd39b6c8167c
+Revision ID: 635eacd51b55
 Revises: 
-Create Date: 2024-04-20 00:06:01.019331
+Create Date: 2024-06-18 15:06:39.088804
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'cd39b6c8167c'
+revision = '635eacd51b55'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -55,8 +55,8 @@ def upgrade():
     sa.Column('time', sa.String(), nullable=True),
     sa.Column('doctor_id', sa.Integer(), nullable=True),
     sa.Column('patient_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['doctor_id'], ['doctors.id'], name=op.f('fk_appointments_doctor_id_doctors')),
-    sa.ForeignKeyConstraint(['patient_id'], ['patients.id'], name=op.f('fk_appointments_patient_id_patients')),
+    sa.ForeignKeyConstraint(['doctor_id'], ['doctors.id'], name=op.f('fk_appointments_doctor_id_doctors'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['patient_id'], ['patients.id'], name=op.f('fk_appointments_patient_id_patients'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
