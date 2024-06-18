@@ -105,7 +105,7 @@ class Home(Resource):
     
 class Doctors(Resource):
     def get(self):
-        doctors = [doctor.to_dict() for doctor in Doctor.query.all()]
+        doctors = [doctor.to_dict(rules=('-_password_hash',)) for doctor in Doctor.query.all()]
         return doctors, 200
     
 class DoctorByID(Resource):
@@ -115,7 +115,7 @@ class DoctorByID(Resource):
     
 class Patients(Resource):
     def get(self):
-        patients = [patient.to_dict() for patient in Patient.query.all()]
+        patients = [patient.to_dict(rules=('-_password_hash',)) for patient in Patient.query.all()]
         return patients, 200
     
 class PatientById(Resource):
