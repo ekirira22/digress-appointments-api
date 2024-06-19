@@ -10,7 +10,9 @@ from models.dbmodel import Doctor, Patient, Appointment, Specialization
 class CheckSession(Resource):
     def get(self):
         user = session.get('username')
-        print(user)
+        if not user:
+            return {"errors": ["User not logged in"]}, 401
+        
         # check if a user is a doctor ot patient
         try:
             doctor = Doctor.query.filter(Doctor.username == user).first()
@@ -19,8 +21,11 @@ class CheckSession(Resource):
                 return doctor.to_dict(rules=('-_password_hash',)), 200
             elif patient:
                 return patient.to_dict(rules=('-_password_hash',)), 200
+            else:
+                return {"errors": ["User not found"]}, 404
+            
         except Exception as e:
-            return {"errors": ["invalid request"]}, 401
+            return {"errors": [str(e)]}, 500
 # Sign a user up
 class Signup(Resource):
 
