@@ -68,28 +68,42 @@ class Signup(Resource):
                 return {"errors" : error_msg}
 
             return patient.to_dict(), 201         
+
 class Login(Resource):
 
     def post(self):
-        json = request.get_json()
+        json_data = request.get_json()
+        if not json_data:
+            return {"errors": ["No input data provided"]}, 400
+
+        username = json_data.get('username')
+        password = json_data.get('password')
+
+        if not username or not password:
+            return {"errors": ["Username and password are required"]}, 400
+
         try:
-            doctor = Doctor.query.filter(Doctor.username == json['username']).first()
-            patient = Patient.query.filter(Patient.username == json['username']).first()
+            doctor = Doctor.query.filter_by(username=username).first()
+            patient = Patient.query.filter_by(username=username).first()
+
             if doctor:
-                # Authenticate user. Check password
-                if not Doctor.authenticate(doctor, json['password']):
-                    return {"errors" : ["Wrong username or password"]}, 401
+                if not doctor.authenticate(password):
+                    return {"errors": ["Wrong username or password"]}, 401
                 session['username'] = doctor.username
                 return doctor.to_dict(rules=('-_password_hash',)), 200
+
             elif patient:
-                # Authenticate user. Check password
-                if not Patient.authenticate(patient, json['password']):
-                    return {"errors" : ["Wrong username or password"]}, 401
+                if not patient.authenticate(password):
+                    return {"errors": ["Wrong username or password"]}, 401
                 session['username'] = patient.username
                 return patient.to_dict(rules=('-_password_hash',)), 200
-        except Exception as e:
-            return {"errors" : [f"{e} : User does not exist"]}, 401
 
+            else:
+                return {"errors": ["User does not exist"]}, 401
+
+        except Exception as e:
+            return {"errors": [str(e)]}, 500
+        
 class Logout(Resource):
     
     def delete(self):
