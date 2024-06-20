@@ -132,6 +132,31 @@ class DoctorByID(Resource):
         doctor = Doctor.query.filter_by(id=id).first().to_dict(rules=('-_password_hash',))
         return doctor, 200
     
+    def patch(self, id):
+        json = request.get_json()
+        doctor = Doctor.query.filter_by(id=id).first()
+
+        for arg in json:
+            setattr(doctor, arg, json[arg])
+
+        db.session.commit()
+        return doctor.to_dict(), 200
+    
+class DoctorByUsername(Resource):
+    def get(self, username):
+        doctor = Doctor.query.filter_by(username=username).first().to_dict(rules=('-_password_hash',))
+        return doctor, 200
+    
+    def patch(self, username):
+        json = request.get_json()
+        doctor = Doctor.query.filter_by(username=username).first()
+
+        for arg in json:
+            setattr(doctor, arg, json[arg])
+
+        db.session.commit()
+        return doctor.to_dict(), 200
+    
 class Patients(Resource):
     def get(self):
         patients = [patient.to_dict(rules=('-_password_hash',)) for patient in Patient.query.all()]
@@ -142,16 +167,92 @@ class PatientById(Resource):
         patient = Patient.query.filter_by(id=id).first().to_dict(rules=('-_password_hash',))
         return patient, 200
     
+    def patch(self, id):
+        json = request.get_json()
+        patient = Patient.query.filter_by(id=id).first()
+
+        for arg in json:
+            setattr(patient, arg, json[arg])
+
+        db.session.commit()
+        return patient.to_dict(), 200
+    
+class PatientByUsername(Resource):
+    def get(self, username):
+        patient = Patient.query.filter_by(username=username).first().to_dict(rules=('-_password_hash',))
+        return patient, 200
+    
+    def patch(self, username):
+        json = request.get_json()
+        patient = Patient.query.filter_by(username=username).first()
+
+        for arg in json:
+            setattr(patient, arg, json[arg])
+
+        db.session.commit()
+        return patient.to_dict(), 200
+    
 class Specializations(Resource):
     def get(self):
         specs = [spec.to_dict() for spec in Specialization.query.all()]
         return specs, 200
+    
+class Appointments(Resource):
+    def get(self):
+        appointments = [appointment.to_dict() for appointment in Appointment.query.all()]
+        return appointments, 200
+    
+    def post(self):
+        json = request.get_json()
+        
+        try:
+            appointment = Appointment(
+                patient_id=json['patient_id'],
+                doctor_id=json['doctor_id'],
+                speciality = json['specialization'],
+                patient_note = json['patient_note'],
+                day=json['date'],
+                time=json['time'],
+            )
+            db.session.add(appointment)
+            db.session.commit()
 
+        except Exception as e:
+            return {"errors": [str(e)]}, 500
+    
+        return appointment.to_dict(), 201
+
+    
+class AppointmentByID(Resource):
+    def get(self, id):
+        appointment = Appointment.query.filter_by(id=id).first().to_dict()
+        return appointment, 200
+    
+    def patch(self, id):
+        json = request.get_json()
+        appointment = Appointment.query.filter_by(id=id).first()
+
+        for arg in json:
+            setattr(appointment, arg, json[arg])
+
+        db.session.commit()
+        return appointment.to_dict(), 200
+    
+    def delete(self, id):
+        appointment = Appointment.query.filter_by(id=id).first()
+        db.session.delete(appointment)
+        db.session.commit()
+        return {"message": "Appointment deleted successfully"}, 200
+
+api.add_resource(Appointments, '/appointments')
+api.add_resource(AppointmentByID, '/appointments/<int:id>')
 api.add_resource(CheckSession, '/check_session')        
 api.add_resource(Specializations, '/specializations')
 api.add_resource(PatientById, '/patients/<int:id>')
+api.add_resource(PatientByUsername, '/patients/<string:username>')
 api.add_resource(Patients, '/patients')
 api.add_resource(DoctorByID, '/doctors/<int:id>')
+api.add_resource(DoctorByUsername, '/doctors/<string:username>')
 api.add_resource(Doctors, '/doctors')
 api.add_resource(Signup, '/signup')
 api.add_resource(Login, '/login')

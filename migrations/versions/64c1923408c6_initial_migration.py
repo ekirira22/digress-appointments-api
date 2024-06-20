@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: 1aace4f72347
+Revision ID: 64c1923408c6
 Revises: 
-Create Date: 2024-06-18 15:24:57.476193
+Create Date: 2024-06-20 15:12:24.866430
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '1aace4f72347'
+revision = '64c1923408c6'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -28,6 +28,10 @@ def upgrade():
     sa.Column('address', sa.String(), nullable=True),
     sa.Column('gender', sa.String(), nullable=True),
     sa.Column('specialization', sa.String(), nullable=True),
+    sa.Column('pulse_rate', sa.Integer(), nullable=True),
+    sa.Column('temparature', sa.Float(), nullable=True),
+    sa.Column('blood_pressure', sa.String(), nullable=True),
+    sa.Column('blood_group', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('username')
@@ -40,6 +44,10 @@ def upgrade():
     sa.Column('_password_hash', sa.String(), nullable=True),
     sa.Column('address', sa.String(), nullable=True),
     sa.Column('gender', sa.String(), nullable=True),
+    sa.Column('pulse_rate', sa.Integer(), nullable=True),
+    sa.Column('temparature', sa.Float(), nullable=True),
+    sa.Column('blood_pressure', sa.String(), nullable=True),
+    sa.Column('blood_group', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('username')
@@ -53,6 +61,8 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('day', sa.String(), nullable=True),
     sa.Column('time', sa.String(), nullable=True),
+    sa.Column('speciality', sa.String(), nullable=True),
+    sa.Column('patient_note', sa.String(), nullable=True),
     sa.Column('doctor_id', sa.Integer(), nullable=True),
     sa.Column('patient_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['doctor_id'], ['doctors.id'], name=op.f('fk_appointments_doctor_id_doctors'), ondelete='CASCADE'),

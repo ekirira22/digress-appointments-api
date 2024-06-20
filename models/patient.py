@@ -12,6 +12,10 @@ class Patient(db.Model, SerializerMixin):
     _password_hash = db.Column(db.String)
     address = db.Column(db.String)
     gender = db.Column(db.String)
+    pulse_rate = db.Column(db.Integer, nullable=True)
+    temparature = db.Column(db.Float, nullable=True)
+    blood_pressure = db.Column(db.String, nullable=True)
+    blood_group = db.Column(db.String, nullable=True)
 
     # Add relationship
     appointments = db.relationship('Appointment', backref='patient', cascade='all, delete-orphan')

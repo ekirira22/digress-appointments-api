@@ -2,6 +2,7 @@ from random import choice as rc, randrange
 from faker import Faker
 from app import app
 from models.dbmodel import db, Doctor, Patient, Appointment, Specialization
+import datetime
 
 fake = Faker()
 
@@ -75,8 +76,10 @@ if __name__ == '__main__':
         appointments = []
         for patient in patients:
             doctor = rc(doctors)
+            random_date = fake.date()
+            random_time = fake.time()
             appointments.append(
-                Appointment(patient=patient, doctor=doctor)
+                Appointment(patient=patient, doctor=doctor, speciality=doctor.specialization, day=random_date, time=random_time, patient_note=fake.text())
             )
         db.session.add_all(appointments)
         db.session.commit()
